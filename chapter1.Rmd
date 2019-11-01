@@ -1,23 +1,19 @@
 
 # About the project
-
-This is nice. I look forward to improving my R skills and learning some good open data practices.
-\
-
-
-##What I expect to learn?
-
+  
+This is nice. I look forward to improving my R skills and learning some good open data practices.<br/><br/>
+  
+**What I expect to learn?**
+  
 * Open data practices
 * Practice R
 * R Markdown (this is my first time using)
 * Recap some data science analyses and good scientific practices
-\
 
-##Where I learned about the course?
+<br/>
 
-I think I just brosed the HYMY courses in WebOodi.
-\
-\
-![lol](https://media1.giphy.com/media/VHHxxFAeLaYzS/source.gif)
-\
-\
+**Where I learned about the course?**
+  
+I think I just brosed the HYMY courses in WebOodi.<br/><br/>
+  
+  
