@@ -15,5 +15,7 @@ This is nice. I look forward to improving my R skills and learning some good ope
 **Where I learned about the course?**
   
 I think I just brosed the HYMY courses in WebOodi.<br/><br/>
-  
+
+
+**Link to my repository: https://github.com/jarvinenjussi/IODS-project**
   
