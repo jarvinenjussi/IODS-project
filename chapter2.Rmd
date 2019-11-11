@@ -124,7 +124,15 @@ The squared multiple correlation coefficient (R^2) ind Model 2 is .19, which imp
 plot(mod2)
 ```
 
+The regression model has several assumptions:
+1. Linear relationships
+2. Multivariate normality
+3. No or little multicollinearity
+4. Normality of residuals
+5. Homoscedasticity or residuals or equal variance
+5. The predictor variables and residuals are uncorrelated
+
 The Residuals vs. Fitted plot shows a linear relationship between the variables.
-The standardized residuals also seem to be normally distributed as implied by the relatively straight line in the Normal Q-Q plot. The Scale-Loaction plot shows that the residuals are spread equally along the range of the predictor which implies homoscedasticity. Lastly, the Residuals vs Leverage plot shows no influential outliers.
+The normality of the variables was examined before the analysis via visuals and descriptive statistics. As there is only one predictor, there cannot be multicollinearity. The standardized residuals also seem to be normally distributed as implied by the relatively straight line in the Normal Q-Q plot. The Scale-Loaction plot shows that the residuals are spread equally along the range of the predictor which implies homoscedasticity. Lastly, the Residuals vs Leverage plot shows no influential outliers.
 
 <br/> <br/>
