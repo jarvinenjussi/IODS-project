@@ -1,7 +1,130 @@
-# Insert chapter 2 title here
+# Chapter 2: Regression and Model Validation
 
-*Describe the work you have done this week and summarize your learning.*
+## The Data
+  
+```{r data}
+data <- read.csv("data/learning2014.csv", row.names = 1)
+```
+<br/>
+The data is from Kimmo Vehkalahti' study ASSIST 2014, which measured the approaches to learning of 183 university students in the Introduction to Social Statistics course in Fall 2014.
+<br/><br/>
+```{r dimensions and structure}
+dim(data)
+str(data)
+```
+<br/>
+The data has 7 variables:  
+  
+* *Gender*: M (Male), F (Female)  
+* *Age* (in years) derived from the date of birth  
+* *Global attitude toward statistics*
+* *Deep learning* measured with 12 items
+* *Strategic learning* measured with 8 items 
+* *Surface learning* measured with 12 items 
+* *Exam points*
+<br/><br/>
 
-- Describe your work and results clearly. 
-- Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods.
-- Assume the reader has no previous knowledge of your data or the more advanced methods you are using.
+Composite variables assessing the approaches to learning were formed combining items measuring each construct by calculating the item means for each participant. 166 cases were included in the analyses as 17 cases with the score 0 for exam points were omitted.
+<br/><br/>
+
+## Overview of the Data
+
+
+```{r libraries, results='hide',message=FALSE}
+library(GGally)
+library(ggplot2)
+library(dplyr)
+library(psych)
+library(ggpubr)
+```
+
+```{r gender}
+p1 <- ggplot(data, aes(x=gender, fill = gender)) + geom_bar()
+p1 + theme(legend.position = "none")
+data %>% count(gender)
+ggplot(data, aes(age)) + geom_histogram(color="white", fill="#88dd88")
+mean(data$age)
+range(data$age)
+```
+<br/>
+There are 110 females and 56 males in the dataset and the ages of the participants range from 17 to 55 years with the average age being 25.5. 
+<br/><br/>
+
+```{r}
+p2 <- ggplot(data, aes(attitude)) + geom_histogram(color="white", fill="darkturquoise", binwidth = 2)
+p3 <- ggplot(data, aes(deep)) + geom_histogram(color="white", fill="darkturquoise", binwidth = 0.2)
+p4 <- ggplot(data, aes(stra)) + geom_histogram(color="white", fill="darkturquoise", binwidth = 0.2)
+p5 <- ggplot(data, aes(surf)) + geom_histogram(color="white", fill="darkturquoise", binwidth = 0.2)
+p6 <- ggplot(data, aes(points),) + geom_histogram(color="white", fill="darkturquoise", binwidth = 2)
+
+figure <- ggarrange(p2, p3, p4, p5, p6,
+                    labels = c("attitude", "deep", "stra", "surf", "points"),
+                    ncol = 3, nrow = 2)
+figure
+
+p7 <- ggpairs(data, mapping = aes(col=gender, alpha=0.3), lower = list(combo = wrap("facethist", bins = 20)))
+p7
+describe(data[,-1])
+```
+
+<br/>
+Other variables seem to be quite symmetrically distributed with a slight negative skewness on deep learning and exam points. By visual inspection, it seems there might be a gender difference in attitude towards statistics with men having more positive attitude in average.
+
+Attitude and exam points are moderately correlated. There is also a weak positive and a weak negative correlation between exam points and strategic learning, and exam points and surface learning, respectively. Intrestingly, deep learning is not correlated with exam points. Surface learning is also negatively correlated to deep and surface learning as well as attitude (r = -.32 ... -.16).
+
+<br/>
+
+## Regression models
+
+### Model 1
+
+```{r}
+mod1 <- lm(points ~ attitude + stra + surf, data = data)
+summary(mod1)
+```
+
+I chose attitude, strategic learning and surgace learning as predictors in my regression model based on the strenght of correlation on exam points.
+
+The **F-statistic** gives a test of the omnibus null hypothesis that all regression coefficients are zero. The F-statistic for the Model 1 is 14.13 with a _p_ value less than .001. Following, it is highly unlikely that there are no non-zero regressions in the model and we can reject the null hypothesis.
+
+The **square of the multiple correlation coefficient (R^2)** is .207, which signifies that the variables in the model account for about 21% of the variation in exam points.
+
+However, the non-significant **_t_-value ** of strategic and surface learning implies that attitude seems to be the only statistically significant predictor in the model (*t* = 5.91, _p_ < .001). The _t_ test tests whether the regression coefficient differs from zero.
+
+The unstandardized **regression coefficients** are reported under "Estimate" in the "Coefficients" table. The coefficient .34 (*p* < .001) of attitude implies the strength of the relationship between attitude and exam points in the original scales of the variables, when strategic and surface learning is controlled for. However, we cannot make judgements about the relative importance of the predictor on the predicted variable using unstandardized coefficients. We can obtain the standardized values by multiplying the raw regression coefficient by multiplying the raw coefficient by the standard deviation of the explanatory variable and dividing by the standard deviation of the response variable:
+
+    attitude: 0.34 × 7.30 / 5.89 = `r round(0.33952*7.3/5.89, 2)`
+    stra: 0.85 × 0.77 / 5.89 = `r round(0.85313*0.77/5.89, 2)`
+    surf: -0.59 × 0.77 / 5.89 = `r round(-0.58607*0.77/5.89, 2)`
+
+The standardized beta coefficient of attitude on exam points in this model is .42. Strategic (*β* = .11) and surface learning (*β* = -.08) did not statistically significantly predict exam points.
+
+From the "Residuals" table, we can also see how the model **residuals** are distributed.
+
+### Model 2
+
+```{r}
+mod2 <- lm(points ~ attitude, data = data)
+summary(mod2)
+```
+
+In Model 2 the two nonsignificant predictors, strategic and surface learning, were omitted and exam points were predicted only by attitude. The null hypothesis is rejected statistically with significant F value 38.61, *p* < .001.
+
+<br/>
+
+**Interpreting the model**
+
+The squared multiple correlation coefficient (R^2) ind Model 2 is .19, which implies that attitude explains 19% of variance in exam points. According to the *t* test, the regression coefficient of attitude differs from 0 with _t_ = 6.21, _p_ < .001. The unstandardized regression coefficient of attitude on exam points is .35 (*p* < .001). This implies that when attitude towards statistics increases by 1 in the original scale, there is an average of 0.35 increase in exam score. The standardized regression coefficient is is `r round(0.35255*7.3/5.89, 2)`, which implies  that when attitude increases by 1 SD, exam points increase `r round(0.35255*7.3/5.89, 2)` SD. Based on the results, we can say that students with more positive attitude on average score higher on the course exam, but the effect is relatively weak.
+
+<br/>
+
+**Regression diagnostics**
+
+```{r}
+plot(mod2)
+```
+
+The Residuals vs. Fitted plot shows a linear relationship between the variables.
+The standardized residuals also seem to be normally distributed as implied by the relatively straight line in the Normal Q-Q plot. The Scale-Loaction plot shows that the residuals are spread equally along the range of the predictor which implies homoscedasticity. Lastly, the Residuals vs Leverage plot shows no influential outliers.
+
+<br/> <br/>
