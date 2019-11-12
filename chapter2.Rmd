@@ -1,6 +1,6 @@
 # 2 Regression and Model Validation
 
-## The Data
+## Overview of the Data
   
 ```{r data}
 data <- read.csv("data/learning2014.csv", row.names = 1)
@@ -25,10 +25,8 @@ The data has 7 variables:
 <br/><br/>
 
 Composite variables assessing the approaches to learning were formed combining items measuring each construct by calculating the item means for each participant. 166 cases were included in the analyses as 17 cases with the score 0 for exam points were omitted.
+
 <br/><br/>
-
-## Overview of the Data
-
 
 ```{r libraries, results='hide',message=FALSE}
 library(GGally)
@@ -48,7 +46,7 @@ range(data$age)
 ```
 <br/>
 There are 110 females and 56 males in the dataset and the ages of the participants range from 17 to 55 years with the average age being 25.5. 
-<br/><br/>
+<br/>
 
 ```{r}
 p2 <- ggplot(data, aes(attitude)) + geom_histogram(color="white", fill="darkturquoise", binwidth = 2)
@@ -108,7 +106,7 @@ mod2 <- lm(points ~ attitude, data = data)
 summary(mod2)
 ```
 
-In Model 2 the two nonsignificant predictors, strategic and surface learning, were omitted and exam points were predicted only by attitude. The null hypothesis is rejected statistically with significant F value 38.61, *p* < .001.
+In Model 2 the two nonsignificant predictors, strategic and surface learning, were omitted and exam points were predicted only by attitude. The null hypothesis is rejected with statistically significant F value 38.61, *p* < .001.
 
 <br/>
 
@@ -124,13 +122,15 @@ The squared multiple correlation coefficient (R^2) ind Model 2 is .19, which imp
 plot(mod2)
 ```
 
+<br/>
 The regression model has several assumptions:
+
 1. Linear relationships
 2. Multivariate normality
-3. No or little multicollinearity
+3. No or little multicollinearity (strong correlations between predictors)
 4. Normality of residuals
-5. Homoscedasticity or residuals or equal variance
-5. The predictor variables and residuals are uncorrelated
+5. Homoscedasticity of residuals or equal variance
+6. The predictor variables and residuals are uncorrelated
 
 The Residuals vs. Fitted plot shows a linear relationship between the variables.
 The normality of the variables was examined before the analysis via visuals and descriptive statistics. As there is only one predictor, there cannot be multicollinearity. The standardized residuals also seem to be normally distributed as implied by the relatively straight line in the Normal Q-Q plot. The Scale-Loaction plot shows that the residuals are spread equally along the range of the predictor which implies homoscedasticity. Lastly, the Residuals vs Leverage plot shows no influential outliers.
