@@ -1,0 +1,235 @@
+# 3 Logistic regression {.tabset}
+
+## Data
+
+### Task 2: Reading and describing the data
+
+<br/>
+
+``` {r data}
+alc <- read.table("data/alc.csv", sep = ",", header = T)
+```
+
+<br/>
+
+The data is Student Performance Data Set from UCI Machine Learning Repository. It approaches student achievement in secondary education of two Portuguese schools. The data attributes include student grades, demographic, social and school related features) and it was collected by using school reports and questionnaires. Two datasets are provided regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por). Full description of the original data can be found [here][link].
+
+The two datasets have been merged using several variables as identifiers to combine individual students information: school, sex, age, address, family size, parents' cohabitation status, parents' education and job, reason to choose school, attendance to school nursery, and home internet access. If the student had answered to the same question on both questionnaires, the the rounded average was calculated. If the question was non-numeric, the answer on Mathematics performance dataset was used.
+
+
+[link]: https://archive.ics.uci.edu/ml/datasets/Student+Performance "Student Performance Data set"
+
+<br/>
+
+#### Variables
+
+
+``` {r variables, echo = F}
+noquote(names(alc))
+```
+
+**Information about variables used in analyses:**
+
+<table>
+<tr>
+<td> _sex_   </td>
+<td> student's sex (binary: 'F' - female or 'M' - male) </td>
+</tr>
+<tr>
+<td> _Medu_   </td>
+<td> mother's education (numeric: 0 none, 1 primary education (4th grade), 2 5th to 9th grade, 3 secondary education or 4 higher education)</td>
+</tr>
+<tr>
+<td> _failures_   </td>
+<td> number of past class failures (numeric: n if 1<=n<3, else 4) </td>
+</tr>
+</tr>
+<tr>
+<td> _absences_ &ensp;</td>
+<td>  number of school absences (numeric: from 0 to 93) </td>
+</tr>
+</table>
+
+## Hypotheses
+
+#### Task 3: Choosing the variables and presenting hypotheses
+
+The purpose of my analysis is to study the relationships between high/low alcohol consumption and students' demographic, social, and school-realted characetristics.
+
+I chose following variables to explain the students' alcohol consumption: student's sex, father's education, class failures, and absentees.
+
+1. Student's sex: Boys and young men usually consume more alcohol compared to girls or young women.
+2. Mother's education: Parents' education has been found to be a significant predictor of different social outcomes and well-being. Families with higher education require less support from sociaty in general. Differences in education level might also reflect differences in parents' own behavior, values and parental support.
+3. Failure: Difficulties stack up and failures might lead to disaffection towards school, which in turn might lead to valuing other activities and social circles that accept or encourage alcohol consumption.
+4. Absences: Absences might be indications of disaffection and negative attitudes towards school, or other problems in life.
+
+(Grade: Poor performance might also be an indication of (or lead to) disaffection towards school. It might affect valuing different activities and social groups, where alcohol consumption might be more accepted or encouraged, which in turn might lead to lower performance in school.)
+
+<br/> 
+
+``` {r subset}
+# Subsetting data
+data <- alc[, c("sex", "Medu", "failures", "absences", "high_use", "G3")]
+
+```
+
+<br/><br/>
+
+## Exploring variables
+
+### Task 4: Exploring the chosen variables numerically and graphically
+
+<br/>
+
+``` {r dplyr, message = F}
+library(tidyverse); library(GGally); library(psych); library(knitr); library(kableExtra)
+```
+
+``` {r describe}
+describe(data[,-5]) %>% kable(digits = 3, caption = "<b>Descriptives of chosen variables</b>") %>% kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+
+<br/> 
+
+``` {r gender} 
+
+p1 <- ggplot(data, aes(x = sex, fill = sex))
+p1 + geom_bar() + theme(legend.position = "none") + ggtitle("Students' sex")
+
+data %>% count(sex) %>% kable(caption = "<b>Sex of students</b>") %>% kable_styling(bootstrap_options = c("striped", "hover"), full_width = F, position = "left")  %>%  column_spec(2, width = "15em")
+
+p2 <- ggplot(data, aes(x = high_use, fill = sex))
+p2 + geom_bar() + theme(legend.position = "none") + facet_wrap(~sex) + 
+  labs(title = "High alcohol consumption of female (left) and male (right) students",
+       caption = "TRUE = high consumption, FALSE = low consumption") 
+
+data %>%
+  group_by(high_use, sex)%>%
+  summarise(n=n())%>%
+  spread(sex, n) %>%
+  kable(caption = "<b>High use by students' sex crosstabulated</b>") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+
+```
+
+<br/>
+**Mother's education**
+
+``` {r Medu}
+
+p3 <- ggplot(data, aes(x = Medu))
+p3 + geom_bar(fill = "deepskyblue2") + theme_classic()
+
+data %>%
+  group_by(high_use, Medu)%>%
+  summarise(n=n())%>%
+  spread(Medu, n) %>%
+  kable(caption = "<b>High use by mother's education crosstabulated</b>") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+
+``` {r failures}
+
+p3 <- ggplot(data, aes(x = failures))
+p3 + geom_bar(fill = "deepskyblue2") + theme_classic()
+
+data %>%
+  group_by(high_use, failures)%>%
+  summarise(n=n())%>%
+  spread(failures, n) %>%
+  kable(caption = "<b>High use by mother's education crosstabulated</b>") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+
+
+``` {r absences}
+
+p4 <- ggplot(data, aes(x = absences))
+p4 + geom_bar(fill = "deepskyblue2") + theme_classic()
+
+px <- ggplot(data, aes(x = high_use, y = absences, fill = sex))
+px + geom_boxplot()
+
+alc %>% group_by(sex, high_use) %>% summarise(count = n(), mean_absences = mean(absences)) %>% kable(digits = 2) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+
+
+``` {r grade}
+
+p4 <- ggplot(data, aes(x = G3))
+p4 + geom_histogram(color = "white", fill = "deepskyblue2", bins=18) + theme_classic()
+
+p5 <- ggplot(alc, aes(x = high_use, y = G3, fill = sex))
+p5 + geom_boxplot()
+
+data %>% group_by(sex, high_use) %>% summarise(count = n(), mean_grade = mean(G3)) %>% kable(digits = 3) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+<br/><br/>
+
+## Logistic Regression Model
+
+### Task 5: Using logistic regression to statistically explore the relationships
+
+``` {r model}
+
+# Fitting the logistic regression
+m <- glm(high_use ~ Medu + failures + absences + sex, data = data, family = "binomial")
+
+# Summary of the model
+summary(m)
+
+# Computing odds ratios and confidence intervals
+OR <- coef(m) %>% exp
+CI <- confint(m) %>% exp
+
+# Printing out the odds ratios with their confidence intervals
+cbind(OR, CI) %>% kable(digits = 3, caption = "Logistic regression model predicting high alcohol consumption with class mother's education, class failures, absences, and student's sex") %>%  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+As expected, class failures, school absences, and student's sex predict higher alcohol consumption. However, mother's education doesn't seem to predict alcohol consumption.
+
+<br/><br/>
+
+
+## Predictiven power
+
+### Task 6: Explore the predictive power of the model
+
+```{r prediction}
+
+# predict() the probability of high_use
+probabilities <- predict(m, type = "response")
+
+# add the predicted probabilities to 'alc'
+data <- mutate(data, probability = probabilities)
+
+# use the probabilities to make a prediction of high_use
+data <- mutate(data, prediction = probability > 0.5)
+
+# see the last ten original classes, predicted probabilities, and class predictions
+select(data, Medu, failures, absences, sex, high_use, probability, prediction) %>% tail(10)
+
+# tabulate the target variable versus the predictions
+table(high_use = data$high_use, prediction = data$prediction)
+
+# initialize a plot of 'high_use' versus 'probability' in 'alc'
+g <- ggplot(data, aes(x = probability, y = high_use, col = prediction))
+
+# define the geom as points and draw the plot
+g + geom_point()
+
+# tabulate the target variable versus the predictions
+table(high_use = data$high_use, prediction = data$prediction) %>% prop.table() %>% addmargins()
+
+
+```
+
+<br/><br/>
