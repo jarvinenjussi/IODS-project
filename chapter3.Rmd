@@ -6,7 +6,7 @@
 
 <br/>
 
-``` {r data}
+``` {r}
 alc <- read.table("data/alc.csv", sep = ",", header = T)
 ```
 
@@ -24,7 +24,7 @@ The two datasets have been merged using several variables as identifiers to comb
 #### Variables
 
 
-``` {r variables, echo = F}
+``` {r echo = F}
 noquote(names(alc))
 ```
 
@@ -63,16 +63,6 @@ I chose following variables to explain the students' alcohol consumption: studen
 3. Failure: Difficulties stack up and failures might lead to disaffection towards school, which in turn might lead to valuing other activities and social circles that accept or encourage alcohol consumption.
 4. Absences: Absences might be indications of disaffection and negative attitudes towards school, or other problems in life.
 
-(Grade: Poor performance might also be an indication of (or lead to) disaffection towards school. It might affect valuing different activities and social groups, where alcohol consumption might be more accepted or encouraged, which in turn might lead to lower performance in school.)
-
-<br/> 
-
-``` {r subset}
-# Subsetting data
-data <- alc[, c("sex", "Medu", "failures", "absences", "high_use", "G3")]
-
-```
-
 <br/><br/>
 
 ## Exploring variables
@@ -81,30 +71,30 @@ data <- alc[, c("sex", "Medu", "failures", "absences", "high_use", "G3")]
 
 <br/>
 
-``` {r dplyr, message = F}
-library(tidyverse); library(GGally); library(psych); library(knitr); library(kableExtra)
+``` {r message = F}
+library(tidyverse); library(psych); library(knitr); library(kableExtra)
 ```
 
-``` {r describe}
-describe(data[,-5]) %>% kable(digits = 3, caption = "<b>Descriptives of chosen variables</b>") %>% kable_styling(bootstrap_options = c("striped", "hover"))
+``` {r}
+describe(alc[, c("sex", "Medu", "failures", "absences", "G3")]) %>% kable(digits = 3, caption = "<b>Descriptives of chosen variables</b>") %>% kable_styling(bootstrap_options = c("striped", "hover"))
 
 ```
 
 <br/> 
 
-``` {r gender} 
+``` {r} 
 
-p1 <- ggplot(data, aes(x = sex, fill = sex))
+p1 <- ggplot(alc, aes(x = sex, fill = sex))
 p1 + geom_bar() + theme(legend.position = "none") + ggtitle("Students' sex")
 
-data %>% count(sex) %>% kable(caption = "<b>Sex of students</b>") %>% kable_styling(bootstrap_options = c("striped", "hover"), full_width = F, position = "left")  %>%  column_spec(2, width = "15em")
+alc %>% count(sex) %>% kable(caption = "<b>Sex of students</b>") %>% kable_styling(bootstrap_options = c("striped", "hover"), full_width = F, position = "left")  %>%  column_spec(2, width = "15em")
 
-p2 <- ggplot(data, aes(x = high_use, fill = sex))
+p2 <- ggplot(alc, aes(x = high_use, fill = sex))
 p2 + geom_bar() + theme(legend.position = "none") + facet_wrap(~sex) + 
   labs(title = "High alcohol consumption of female (left) and male (right) students",
        caption = "TRUE = high consumption, FALSE = low consumption") 
 
-data %>%
+alc %>%
   group_by(high_use, sex)%>%
   summarise(n=n())%>%
   spread(sex, n) %>%
@@ -117,12 +107,12 @@ data %>%
 <br/>
 **Mother's education**
 
-``` {r Medu}
+``` {r}
 
-p3 <- ggplot(data, aes(x = Medu))
+p3 <- ggplot(alc, aes(x = Medu))
 p3 + geom_bar(fill = "deepskyblue2") + theme_classic()
 
-data %>%
+alc %>%
   group_by(high_use, Medu)%>%
   summarise(n=n())%>%
   spread(Medu, n) %>%
@@ -131,12 +121,12 @@ data %>%
 
 ```
 
-``` {r failures}
+``` {r}
 
-p3 <- ggplot(data, aes(x = failures))
+p3 <- ggplot(alc, aes(x = failures))
 p3 + geom_bar(fill = "deepskyblue2") + theme_classic()
 
-data %>%
+alc %>%
   group_by(high_use, failures)%>%
   summarise(n=n())%>%
   spread(failures, n) %>%
@@ -146,12 +136,12 @@ data %>%
 ```
 
 
-``` {r absences}
+``` {r}
 
-p4 <- ggplot(data, aes(x = absences))
+p4 <- ggplot(alc, aes(x = absences))
 p4 + geom_bar(fill = "deepskyblue2") + theme_classic()
 
-px <- ggplot(data, aes(x = high_use, y = absences, fill = sex))
+px <- ggplot(alc, aes(x = high_use, y = absences, fill = sex))
 px + geom_boxplot()
 
 alc %>% group_by(sex, high_use) %>% summarise(count = n(), mean_absences = mean(absences)) %>% kable(digits = 2) %>%
@@ -160,15 +150,15 @@ alc %>% group_by(sex, high_use) %>% summarise(count = n(), mean_absences = mean(
 ```
 
 
-``` {r grade}
+``` {r}
 
-p4 <- ggplot(data, aes(x = G3))
+p4 <- ggplot(alc, aes(x = G3))
 p4 + geom_histogram(color = "white", fill = "deepskyblue2", bins=18) + theme_classic()
 
 p5 <- ggplot(alc, aes(x = high_use, y = G3, fill = sex))
 p5 + geom_boxplot()
 
-data %>% group_by(sex, high_use) %>% summarise(count = n(), mean_grade = mean(G3)) %>% kable(digits = 3) %>%
+alc %>% group_by(sex, high_use) %>% summarise(count = n(), mean_grade = mean(G3)) %>% kable(digits = 3) %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
@@ -178,10 +168,10 @@ data %>% group_by(sex, high_use) %>% summarise(count = n(), mean_grade = mean(G3
 
 ### Task 5: Using logistic regression to statistically explore the relationships
 
-``` {r model}
+``` {r}
 
 # Fitting the logistic regression
-m <- glm(high_use ~ Medu + failures + absences + sex, data = data, family = "binomial")
+m <- glm(high_use ~ Medu + failures + absences + sex, data = alc, family = "binomial")
 
 # Summary of the model
 summary(m)
@@ -203,31 +193,31 @@ As expected, class failures, school absences, and student's sex predict higher a
 
 ### Task 6: Explore the predictive power of the model
 
-```{r prediction}
+```{r}
 
 # predict() the probability of high_use
 probabilities <- predict(m, type = "response")
 
 # add the predicted probabilities to 'alc'
-data <- mutate(data, probability = probabilities)
+alc <- mutate(alc, probability = probabilities)
 
 # use the probabilities to make a prediction of high_use
-data <- mutate(data, prediction = probability > 0.5)
+alc <- mutate(alc, prediction = probability > 0.5)
 
 # see the last ten original classes, predicted probabilities, and class predictions
-select(data, Medu, failures, absences, sex, high_use, probability, prediction) %>% tail(10)
+select(alc, Medu, failures, absences, sex, high_use, probability, prediction) %>% tail(10)
 
 # tabulate the target variable versus the predictions
-table(high_use = data$high_use, prediction = data$prediction)
+table(high_use = alc$high_use, prediction = alc$prediction)
 
 # initialize a plot of 'high_use' versus 'probability' in 'alc'
-g <- ggplot(data, aes(x = probability, y = high_use, col = prediction))
+g <- ggplot(alc, aes(x = probability, y = high_use, col = prediction))
 
 # define the geom as points and draw the plot
 g + geom_point()
 
 # tabulate the target variable versus the predictions
-table(high_use = data$high_use, prediction = data$prediction) %>% prop.table() %>% addmargins()
+table(high_use = alc$high_use, prediction = alc$prediction) %>% prop.table() %>% addmargins()
 
 
 ```
