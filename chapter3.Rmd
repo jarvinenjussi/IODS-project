@@ -1,4 +1,4 @@
-# 3 Logistic regression {.tabset .tabset-fade .tabset-pills}
+# 3 Logistic regression 
 
 ## Data
 
@@ -79,7 +79,12 @@ levels(alc$Medu) <- c("None", "Primary", "5th to 9th", "Secondary", "Higher")
 
 ```
 
-<br/><br/><br/><br/>
+<br/><br/><br/>
+
+---
+
+<br/><br/><br/>
+
 
 ## Hypotheses
 
@@ -94,9 +99,11 @@ I chose following variables to explain the students' alcohol consumption: studen
 3. Failure: Difficulties stack up and failures might lead to disaffection towards school, which in turn might lead to valuing other activities and social circles that accept or encourage alcohol consumption.
 4. Absences: Absences might be indications of disaffection and negative attitudes towards school, or other problems in life.
 
+<br/><br/><br/>
 
+---
 
-<br/><br/><br/><br/><br/><br/>
+<br/><br/><br/>
 
 ## Exploring variables
 
@@ -135,7 +142,7 @@ alc %>%
 ```
 
 <br/>
-**Mother's education**
+
 
 ``` {r 3_Medu}
 
@@ -192,7 +199,11 @@ alc %>% group_by(sex, high_use) %>% summarise(count = n(), mean_grade = mean(G3)
   kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
-<br/><br/><br/><br/>
+<br/><br/><br/>
+
+---
+
+<br/><br/><br/>
 
 ## Logistic Regression Model
 
@@ -245,7 +256,13 @@ Conclusion: As expected, class failures, school absences, and student's sex pred
 
 [odds]: https://media.giphy.com/media/1HH6lJOzOXAY/giphy.gif "Never tell me the odds"
 
-<br/><br/><br/><br/>
+
+<br/><br/><br/>
+
+---
+
+<br/><br/><br/>
+
 
 
 ## Predictiven power
@@ -297,7 +314,9 @@ loss_func(class = alc$high_use, prob = alc$probability)
 
 The average number of frong predictions in the data is 23% using student's sex, absences, and class failures as predictors. This means that the prediction was right about three times out of four. This is significantly better than by just guessing (error rate of 50%). The model was especially accurate at predicting low alcohol consumption by preidcting correctly 257 times out of 268. However, the model predicted wrong most of the cases where the alcohol consumption was categorized high.
 
-<br/><br/><br/><br/>
+
+
+
 
 
 
