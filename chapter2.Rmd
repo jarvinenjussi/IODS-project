@@ -1,4 +1,4 @@
-# 2 Regression and Model Validation
+# 2 Regression and Model Validation {.tabset .tabset-fade .tabset-pills}
 
 ## Overview of the Data
   
@@ -70,7 +70,7 @@ Other variables seem to be quite symmetrically distributed with a slight negativ
 
 Attitude and exam points are moderately correlated. There is also a weak positive and a weak negative correlation between exam points and strategic learning, and exam points and surface learning, respectively. Intrestingly, deep learning is not correlated with exam points. Surface learning is also negatively correlated to deep and surface learning as well as attitude (r = -.32 ... -.16).
 
-<br/>
+<br/><br/><br/>
 
 ## Regression models
 

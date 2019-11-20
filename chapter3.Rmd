@@ -1,4 +1,4 @@
-# 3 Logistic regression {.tabset}
+# 3 Logistic regression {.tabset .tabset-fade .tabset-pills}
 
 ## Data
 
@@ -6,53 +6,84 @@
 
 <br/>
 
-``` {r}
+``` {r 3_libraries, message = F}
+library(tidyverse); library(psych); library(knitr); library(kableExtra)
+```
+
+``` {r 3_data}
 alc <- read.table("data/alc.csv", sep = ",", header = T)
 ```
 
 <br/>
 
-The data is Student Performance Data Set from UCI Machine Learning Repository. It approaches student achievement in secondary education of two Portuguese schools. The data attributes include student grades, demographic, social and school related features) and it was collected by using school reports and questionnaires. Two datasets are provided regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por). Full description of the original data can be found [here][link].
+The data is Student Performance Data Set from UCI Machine Learning Repository. It approaches student achievement in secondary education of two Portuguese schools. The data attributes include student grades, demographic, social and school related features) and it was collected by using school reports and questionnaires. Two datasets are provided regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por). Full description of the original data can be found [here][repo].
 
 The two datasets have been merged using several variables as identifiers to combine individual students information: school, sex, age, address, family size, parents' cohabitation status, parents' education and job, reason to choose school, attendance to school nursery, and home internet access. If the student had answered to the same question on both questionnaires, the the rounded average was calculated. If the question was non-numeric, the answer on Mathematics performance dataset was used.
 
+The R script about creating the merged dataset can be found [here][script].
 
-[link]: https://archive.ics.uci.edu/ml/datasets/Student+Performance "Student Performance Data set"
+[repo]: https://archive.ics.uci.edu/ml/datasets/Student+Performance "Student Performance Data set"
+[script]: https://github.com/jarvinenjussi/IODS-project/blob/master/data/create_alc.R "Create alc"
 
 <br/>
 
 #### Variables
 
 
-``` {r echo = F}
+``` {r 3_variables, echo = F}
 noquote(names(alc))
 ```
 
-**Information about variables used in analyses:**
+<br/>
 
-<table>
-<tr>
-<td> _sex_   </td>
-<td> student's sex (binary: 'F' - female or 'M' - male) </td>
-</tr>
-<tr>
-<td> _Medu_   </td>
-<td> mother's education (numeric: 0 none, 1 primary education (4th grade), 2 5th to 9th grade, 3 secondary education or 4 higher education)</td>
-</tr>
-<tr>
-<td> _failures_   </td>
-<td> number of past class failures (numeric: n if 1<=n<3, else 4) </td>
-</tr>
-</tr>
-<tr>
-<td> _absences_ &ensp;</td>
-<td>  number of school absences (numeric: from 0 to 93) </td>
-</tr>
-</table>
+```{r 3_vartable, echo=F, message=F}
+
+vars <- data.frame(
+  Variables = c("sex", "Medu", "failures", "absences", "high_use"),
+  Information = c(
+    "'s sex (binary: 'F' - female or 'M' - male)",
+    "mother's education (numeric: 0 none, 1 primary education (4th grade), 2 5th to 9th grade, 3 secondary education or 4 higher education)",
+    "number of past class failures (numeric: n if 1<=n<3, else 4)",
+    "number of school absences (numeric: from 0 to 93)",
+    "high alcohol consumption (TRUE: the average of self-reported workday and weekend alcohol consumption greater than 2 on a scale 1 -very low - 5 very high, FALSE: the average 2 or lower) "
+  )
+)
+
+kable(vars, caption = "<b>Table 1</b> Information about variables used in analyses") %>%
+  kable_styling(full_width = F, bootstrap_options = "hover") %>%
+  column_spec(1, bold = T, italic = T) %>% 
+  column_spec(2)
+```
+
+<br/>
+
+Let's take a glimpse of the structure and dimensions of the subset of data we are using:
+
+<br/>
+
+``` {r 3_glimpse}
+# subsetting
+sub <- c("sex", "Medu", "failures", "absences", "G3")
+glimpse(alc[,sub])
+```
+
+<br/>
+
+As Medu is truly a categorical variable, not a numerical one, it will have to be recoded into a factor.
+
+<br/>
+
+```{r 3_recode}
+alc$Medu <- factor(alc$Medu)
+levels(alc$Medu) <- c("None", "Primary", "5th to 9th", "Secondary", "Higher")
+
+```
+
+<br/><br/><br/><br/>
 
 ## Hypotheses
 
-#### Task 3: Choosing the variables and presenting hypotheses
+### Task 3: Choosing the variables and presenting hypotheses
 
 The purpose of my analysis is to study the relationships between high/low alcohol consumption and students' demographic, social, and school-realted characetristics.
 
@@ -63,7 +94,9 @@ I chose following variables to explain the students' alcohol consumption: studen
 3. Failure: Difficulties stack up and failures might lead to disaffection towards school, which in turn might lead to valuing other activities and social circles that accept or encourage alcohol consumption.
 4. Absences: Absences might be indications of disaffection and negative attitudes towards school, or other problems in life.
 
-<br/><br/>
+
+
+<br/><br/><br/><br/><br/><br/>
 
 ## Exploring variables
 
@@ -71,34 +104,31 @@ I chose following variables to explain the students' alcohol consumption: studen
 
 <br/>
 
-``` {r message = F}
-library(tidyverse); library(psych); library(knitr); library(kableExtra)
-```
-
-``` {r}
-describe(alc[, c("sex", "Medu", "failures", "absences", "G3")]) %>% kable(digits = 3, caption = "<b>Descriptives of chosen variables</b>") %>% kable_styling(bootstrap_options = c("striped", "hover"))
+``` {r 3_describe}
+describe(alc[, c("sex", "Medu", "failures", "absences", "G3")]) %>% kable(digits = 3, caption = "<b>Table 2</b> Descriptives of chosen variables") %>% kable_styling(bootstrap_options = c("striped", "hover"))
 
 ```
 
 <br/> 
 
-``` {r} 
+``` {r 3_gender} 
 
 p1 <- ggplot(alc, aes(x = sex, fill = sex))
-p1 + geom_bar() + theme(legend.position = "none") + ggtitle("Students' sex")
+p1 + geom_bar() + theme(legend.position = "none") + ggtitle("Students' sex")+ ylab(" ") + xlab("Sex")
 
-alc %>% count(sex) %>% kable(caption = "<b>Sex of students</b>") %>% kable_styling(bootstrap_options = c("striped", "hover"), full_width = F, position = "left")  %>%  column_spec(2, width = "15em")
+alc %>% count(sex) %>% kable(caption = "<b>Tale 3</b> Students' sex") %>% kable_styling(bootstrap_options = c("striped", "hover"), full_width = F, position = "left")  %>%  column_spec(2, width = "15em")
 
 p2 <- ggplot(alc, aes(x = high_use, fill = sex))
 p2 + geom_bar() + theme(legend.position = "none") + facet_wrap(~sex) + 
   labs(title = "High alcohol consumption of female (left) and male (right) students",
-       caption = "TRUE = high consumption, FALSE = low consumption") 
+       caption = "TRUE = high consumption, FALSE = low consumption") +
+  ylab(" ") + xlab("High alcohol consumption")
 
 alc %>%
   group_by(high_use, sex)%>%
   summarise(n=n())%>%
   spread(sex, n) %>%
-  kable(caption = "<b>High use by students' sex crosstabulated</b>") %>%
+  kable(caption = "<b>Table 3</b> High/low alcohol consumption by students' sex crosstabulated") %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
 
 
@@ -107,96 +137,125 @@ alc %>%
 <br/>
 **Mother's education**
 
-``` {r}
+``` {r 3_Medu}
 
 p3 <- ggplot(alc, aes(x = Medu))
-p3 + geom_bar(fill = "deepskyblue2") + theme_classic()
+p3 + geom_bar(fill = "deepskyblue2") + theme_classic() + ggtitle("Mother's education") + ylab(" ") + xlab("Education level of mother")
 
 alc %>%
   group_by(high_use, Medu)%>%
   summarise(n=n())%>%
   spread(Medu, n) %>%
-  kable(caption = "<b>High use by mother's education crosstabulated</b>") %>%
+  kable(caption = "<b>Table 4</b> High/low alcohol consumption by mother's education crosstabulated") %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
 
 ```
 
-``` {r}
+``` {r 3_failures}
 
 p3 <- ggplot(alc, aes(x = failures))
-p3 + geom_bar(fill = "deepskyblue2") + theme_classic()
+p3 + geom_bar(fill = "deepskyblue2") + theme_classic() + ggtitle("Class failures") + ylab(" ") + xlab("Number of class failures")
 
 alc %>%
   group_by(high_use, failures)%>%
   summarise(n=n())%>%
   spread(failures, n) %>%
-  kable(caption = "<b>High use by mother's education crosstabulated</b>") %>%
+  kable(caption = "<b>Table 5</b> High/low alcohol consumption by mother's education crosstabulated") %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
 
 ```
 
 
-``` {r}
+``` {r 3_absences}
 
 p4 <- ggplot(alc, aes(x = absences))
-p4 + geom_bar(fill = "deepskyblue2") + theme_classic()
+p4 + geom_bar(fill = "deepskyblue2") + theme_classic() + ggtitle("Absences") + ylab(" ") + xlab("Number of absences")
 
-px <- ggplot(alc, aes(x = high_use, y = absences, fill = sex))
-px + geom_boxplot()
+p5 <- ggplot(alc, aes(x = high_use, y = absences, fill = sex)) 
+p5 + geom_boxplot() + ggtitle("Boxplots of absences vs. high/low alcohol use by gender") + ylab("Number of absences") + xlab("High alcohol consumption")
 
-alc %>% group_by(sex, high_use) %>% summarise(count = n(), mean_absences = mean(absences)) %>% kable(digits = 2) %>%
+alc %>% group_by(sex, high_use) %>% summarise(count = n(), mean_absences = mean(absences)) %>% kable(digits = 2, caption = "<b>Table 5</b> Mean number absences by high/low alcohol consumption and sex") %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
 
 ```
 
 
-``` {r}
+``` {r 3_grade}
 
-p4 <- ggplot(alc, aes(x = G3))
-p4 + geom_histogram(color = "white", fill = "deepskyblue2", bins=18) + theme_classic()
+p6 <- ggplot(alc, aes(x = G3))
+p6 + geom_histogram(color = "white", fill = "deepskyblue2", bins=18) + theme_classic() + ggtitle("Grade") + ylab(" ") + xlab("Grade")
 
-p5 <- ggplot(alc, aes(x = high_use, y = G3, fill = sex))
-p5 + geom_boxplot()
+p7 <- ggplot(alc, aes(x = high_use, y = G3, fill = sex))
+p7 + geom_boxplot() + ggtitle("Boxplots of grades vs. high/low alcohol use by gender") + ylab("Grade") + xlab("High alcohol consumption")
 
-alc %>% group_by(sex, high_use) %>% summarise(count = n(), mean_grade = mean(G3)) %>% kable(digits = 3) %>%
+alc %>% group_by(sex, high_use) %>% summarise(count = n(), mean_grade = mean(G3)) %>% kable(digits = 3, caption = "<b>Table 6</b> Mean grade by high/low alcohol consumption and sex") %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
-<br/><br/>
+<br/><br/><br/><br/>
 
 ## Logistic Regression Model
 
 ### Task 5: Using logistic regression to statistically explore the relationships
 
-``` {r}
+``` {r 3_model1}
 
 # Fitting the logistic regression
-m <- glm(high_use ~ Medu + failures + absences + sex, data = alc, family = "binomial")
+mod1 <- glm(high_use ~ Medu + failures + absences + sex, data = alc, family = "binomial")
 
 # Summary of the model
-summary(m)
-
-# Computing odds ratios and confidence intervals
-OR <- coef(m) %>% exp
-CI <- confint(m) %>% exp
-
-# Printing out the odds ratios with their confidence intervals
-cbind(OR, CI) %>% kable(digits = 3, caption = "Logistic regression model predicting high alcohol consumption with class mother's education, class failures, absences, and student's sex") %>%  kable_styling(bootstrap_options = c("striped", "hover"))
+summary(mod1)
 ```
 
-As expected, class failures, school absences, and student's sex predict higher alcohol consumption. However, mother's education doesn't seem to predict alcohol consumption.
+<br/>
 
-<br/><br/>
+As Medu does not consistently predict high alcohol consumption well (the only significant coefficient being class "5th to 9th" [p =.040], I omitted the variable from the model. This also makes the model easier to interpret.
+
+<br/>
+
+```{r 3_model2}
+# Fittiing Model 2
+mod2 <- glm(high_use ~ failures + absences + sex, data = alc, family = "binomial")
+
+# Summary of Model 2
+summary(mod2)
+
+# Computing odds ratios and confidence intervals
+OR <- coef(mod2) %>% exp
+CI <- confint(mod2) %>% exp
+
+# Printing out the odds ratios with their confidence intervals
+cbind(OR, CI) %>% kable(digits = 3, caption = "<b>Table 7</b> Odds ratios and their confidence intervals") %>%  kable_styling(bootstrap_options = c("striped", "hover"))
+
+```
+
+As we can see from the model summary, the intercept of high alcohol consumption is -1.90, which is more than 8 standard deviations (z value or the Wald's Test value) away from 0 on the standard normal curve with a statistically significant p < .001. The slope coefficient of, for example, absences is 0.093. This means that for one point increase in absences the log of the odds of high alcohol consumption increases 0.09. The z values of coefficients of failures, absences, and sex ar positive and over 2 standard deviations away from 0 and are statistically significant with p < .05 for failures and p < .001 for absences and sex.
+
+From the odds ratios we we can see that when the effect of the other predictor variables are taken into account...
+
+* The odds of high alcohol consumption increases about 8% to 130% with each class failure.
+* The odds of high alcohol consumption increases about 5 to 15 % with every absence.
+* The odds of male students to consume high amounts of alcohol is about one-and-a-half to to four times the odds of female students.
+
+Conclusion: As expected, class failures, school absences, and student's sex predict higher alcohol consumption. Male students are more likely be high alcohol consumers. Class failures and absentees also increase the probability of higher consumption. However, mother's education doesn't seem to predict alcohol use consistently.
+
+<br/>
+
+![][odds]
+
+[odds]: https://media.giphy.com/media/1HH6lJOzOXAY/giphy.gif "Never tell me the odds"
+
+<br/><br/><br/><br/>
 
 
 ## Predictiven power
 
 ### Task 6: Explore the predictive power of the model
 
-```{r}
+```{r 3_prediction}
 
 # predict() the probability of high_use
-probabilities <- predict(m, type = "response")
+probabilities <- predict(mod1, type = "response")
 
 # add the predicted probabilities to 'alc'
 alc <- mutate(alc, probability = probabilities)
@@ -219,7 +278,30 @@ g + geom_point()
 # tabulate the target variable versus the predictions
 table(high_use = alc$high_use, prediction = alc$prediction) %>% prop.table() %>% addmargins()
 
+```
+
+
+``` {r 3_lossfunction}
+# define a loss function (mean prediction error)
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+
+# call loss_func to compute the average number of wrong predictions in the (training) data
+loss_func(class = alc$high_use, prob = alc$probability)
 
 ```
 
-<br/><br/>
+<br/>
+
+The average number of frong predictions in the data is 23% using student's sex, absences, and class failures as predictors. This means that the prediction was right about three times out of four. This is significantly better than by just guessing (error rate of 50%). The model was especially accurate at predicting low alcohol consumption by preidcting correctly 257 times out of 268. However, the model predicted wrong most of the cases where the alcohol consumption was categorized high.
+
+<br/><br/><br/><br/>
+
+
+
+
+
+
+

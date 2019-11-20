@@ -1,7 +1,8 @@
-
 # 1 About the project
   
-This is nice. I look forward to improving my R skills and learning some good open data practices.<br/><br/>
+**Welcome to my IODS 2019 course project page!**
+
+This project diary is basically me trying to learn how to do statistical analyses with R.  I look forward to improving my R skills and learning some good open data practices.<br/><br/>
   
 **What I expect to learn?**
   
@@ -16,6 +17,3 @@ This is nice. I look forward to improving my R skills and learning some good ope
   
 I think I just brosed the HYMY courses in WebOodi.<br/><br/>
 
-
-**Link to my repository: https://github.com/jarvinenjussi/IODS-project**
-  

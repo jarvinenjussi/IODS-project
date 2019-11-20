@@ -3,17 +3,23 @@ title: "IODS course project"
 author: "Jussi Järvinen"
 output:
   html_document:
-    theme: "flatly"
+    theme: yeti
+    highlight: tango
     toc: true
     toc_depth: 2
+    toc_float: true
+    toc_collapsed: true
     fig_caption: true
     fig_width: 6
     fig_height: 4
+    
 ---
+
+[My IODS project github data repository][repository] ↗
 
 ***
   
-```{r child = "chapter1.Rmd"}
+``` {r child = "chapter1.Rmd"}
 ```
   
 ***
@@ -27,3 +33,7 @@ output:
 ```
 
 ***
+
+
+[repository]: https://github.com/jarvinenjussi/IODS-project
+[onw]: 
