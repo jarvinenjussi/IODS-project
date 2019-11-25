@@ -22,30 +22,39 @@ output:
 ``` {r child = "chapter1.Rmd"}
 ```
 
-<br/><br/>
+<br/><br/><br/>
 
 ***
 
-<br/>br/>
+<br/><br/><br/>
+
 
 ```{r child = "chapter2.Rmd"}
 ```
 
-<br/><br/>
+<br/><br/><br/>
 
 ***
 
-<br/>br/>
+<br/><br/><br/>
 
 ```{r child = "chapter3.Rmd"}
 ```
 
-<br/><br/>
+<br/><br/><br/>
 
 ***
 
-<br/>br/>
+<br/><br/><br/>
 
+```{r child = "chapter4.Rmd"}
+```
+
+<br/><br/><br/>
+
+***
+
+<br/><br/><br/>
 
 [repository]: https://github.com/jarvinenjussi/IODS-project
 [onw]: 

@@ -15,5 +15,6 @@ This project diary is basically me trying to learn how to do statistical analyse
 
 **Where I learned about the course?**
   
-I think I just brosed the HYMY courses in WebOodi.<br/><br/>
+I think I just brosed the HYMY courses in WebOodi
+
 

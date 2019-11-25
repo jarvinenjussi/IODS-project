@@ -1,4 +1,4 @@
-# 2 Regression and Model Validation {.tabset .tabset-fade .tabset-pills}
+# 2 Regression and model validation
 
 ## Overview of the Data
   

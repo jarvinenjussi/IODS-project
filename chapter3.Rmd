@@ -1,8 +1,6 @@
 # 3 Logistic regression 
 
-## Data
-
-### Task 2: Reading and describing the data
+## Task 2: The data
 
 <br/>
 
@@ -27,7 +25,7 @@ The R script about creating the merged dataset can be found [here][script].
 
 <br/>
 
-#### Variables
+### Variables
 
 
 ``` {r 3_variables, echo = F}
@@ -86,9 +84,7 @@ levels(alc$Medu) <- c("None", "Primary", "5th to 9th", "Secondary", "Higher")
 <br/><br/><br/>
 
 
-## Hypotheses
-
-### Task 3: Choosing the variables and presenting hypotheses
+## Task 3: Hypotheses
 
 The purpose of my analysis is to study the relationships between high/low alcohol consumption and students' demographic, social, and school-realted characetristics.
 
@@ -105,9 +101,7 @@ I chose following variables to explain the students' alcohol consumption: studen
 
 <br/><br/><br/>
 
-## Exploring variables
-
-### Task 4: Exploring the chosen variables numerically and graphically
+## Task 4: Exploring the data
 
 <br/>
 
@@ -205,9 +199,7 @@ alc %>% group_by(sex, high_use) %>% summarise(count = n(), mean_grade = mean(G3)
 
 <br/><br/><br/>
 
-## Logistic Regression Model
-
-### Task 5: Using logistic regression to statistically explore the relationships
+## Task 5: Logistic regression
 
 ``` {r 3_model1}
 
@@ -264,10 +256,7 @@ Conclusion: As expected, class failures, school absences, and student's sex pred
 <br/><br/><br/>
 
 
-
-## Predictiven power
-
-### Task 6: Explore the predictive power of the model
+## Task 6: Predictive power
 
 ```{r 3_prediction}
 

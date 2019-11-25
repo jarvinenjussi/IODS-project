@@ -1,0 +1,366 @@
+# 4 Clustering and classification
+
+## Task 2: The data
+
+**Load the Boston data from the MASS package. Explore the structure and the dimensions of the data and describe the dataset briefly, assuming the reader has no previous knowledge of it.**
+
+<br/>
+
+``` {r 4_libraries, message = F}
+library(MASS); library(tidyverse); library(psych); library(knitr);
+library(kableExtra); library(ggplot2); library(corrplot); library(ggpubr)
+library(GGally); library(caret)
+```
+
+``` {r 4_data}
+data("Boston")
+```
+
+<br/>
+
+The _Boston_ dataset (Harrison & Rubinfield , 1978; Belsey, Kuh, & Welsch, 1980) from the _MASS_ package is about the housing values in suburbs of Boston. Information about the dataset can be found [here][boston]. The dataset contains following variables:
+
+<br/>
+
+```{r 4_variables, echo=F, message=F}
+
+vars <- data.frame(
+  Variables = colnames(Boston),
+  Information = c(
+    "per capita crime rate by town.",
+    "proportion of residential land zoned for lots over 25,000 sq.ft.",
+    "proportion of non-retail business acres per town.",
+    "Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).",
+    "nitrogen oxides concentration (parts per 10 million).",
+    "average number of rooms per dwelling.",
+    "proportion of owner-occupied units built prior to 1940.",
+    "weighted mean of distances to five Boston employment centres.",
+    "index of accessibility to radial highways.",
+    "full-value property-tax rate per \ $10,000.",
+    "pupil-teacher ratio by town.",
+    "1000(Bk − 0.63)2 where Bk is the proportion of blacks by town.",
+    "lower status of the population (percent).",
+    "median value of owner-occupied homes in \ $1,000s.")
+)
+
+kable(vars, caption = "<b>Table 1</b> Variables in the dataset") %>%
+  kable_styling(bootstrap_options = "hover") %>%
+  column_spec(1, bold = T, italic = T) %>% 
+  column_spec(2)
+
+# exploring the structure and dimensions
+glimpse(Boston)
+```
+
+<br/>
+
+The dataset has 506 observations and 14 variables.
+
+<br/>
+
+**Original source:**
+
+Harrison, D. and Rubinfeld, D.L. (1978) Hedonic prices and the demand for clean air. _J. Environ. Economics and Management_ 5, 81–102.
+Belsley D.A., Kuh, E. and Welsch, R.E. (1980) _Regression Diagnostics. Identifying Influential Data and Sources of Collinearity._ New York: Wiley.
+
+
+<br/><br/>
+
+[boston]: https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/Boston.html
+
+## Task 3: Exploring the data
+
+**Show a graphical overview of the data and show summaries of the variables in the data. Describe and interpret the outputs, commenting on the distributions of the variables and the relationships between them.**
+
+
+```{r 4_explore}
+# exploring descripotive statistics
+describe(Boston) %>% kable(caption = "<b>Table 2</b> Descriptive statistics", digits = 2) %>%
+  kable_styling(bootstrap_options = "striped", "hover")
+
+# visualizing distributions
+plots <- list(names(Boston[,-4]))
+for(i in names(Boston[,-4])) {
+    plots[[i]] <- ggplot(data=Boston) + geom_histogram(aes_string(x=i),
+                                                       color="darkslategray", fill="darkturquoise",
+                                                       bins = 20)
+}
+
+plots$chas <- ggplot(Boston, aes(chas)) + geom_bar(color="darkslategray", fill="darkturquoise") +
+  scale_x_continuous(breaks = 0:1)
+
+fig1 <- ggarrange(plots$crim, plots$zn, plots$indus,
+                  plots$chas, plots$nox, plots$rm,
+                  plots$age, plots$dis, plots$rad,
+                  ncol = 3, nrow = 3)
+fig2 <- ggarrange(plots$tax, plots$ptratio, plots$black,
+                  plots$lstat, plots$medv,
+                  ncol = 3, nrow = 3)
+
+fig1
+fig2
+```
+
+Variables _crim_ and _zn_, are considerably positively skewed with a strong floor effect, whereas _black_ is negatively skewed with a strong ceiling effect. Variables _indus_, _rad_, and _tax_ seem to be are bimodal or have gaps in the histogram followed by high value peaks. 
+
+<br/>
+
+
+``` {r 4_correlations}
+# pairs
+ggpairs(Boston[1:7], lower = list(combo = wrap("facethist", bins = 20)))
+ggpairs(Boston[8:14], lower = list(combo = wrap("facethist", bins = 20)))
+
+# correlation matrix
+cor.mat <- cor(Boston)
+
+cor.mat %>% kable(digits = 2, caption = "<b>Table 3</b> Correlations") %>% 
+  kable_styling(bootstrap_options = "striped", "hover")
+
+```
+
+**Correlogram showing correlations with p < .05**
+
+
+``` {r 4_correlogram}
+# p-value matrix
+cor.mtest <- function(cor.mat, ...) {
+    mat <- as.matrix(cor.mat)
+    n <- ncol(cor.mat)
+    p.mat<- matrix(NA, n, n)
+    diag(p.mat) <- 0
+    for (i in 1:(n - 1)) {
+        for (j in (i + 1):n) {
+            tmp <- cor.test(mat[, i], mat[, j], ...)
+            p.mat[i, j] <- p.mat[j, i] <- tmp$p.value
+        }
+    }
+  colnames(p.mat) <- rownames(p.mat) <- colnames(mat)
+  p.mat
+}
+
+p.mat <- cor.mtest(Boston)
+
+# correlogram
+corrplot.mixed(cor.mat, lower = "circle", upper = "number", tl.col = "black",
+               tl.cex = 0.7, number.cex = 0.8, number.digits = 2,
+               p.mat = p.mat, sig.level = 0.05, insig = "blank")
+
+```
+
+<br/>
+
+The correlation matrix shows that:
+
+The crime rate of the suburb correlates moderately with accessibility to radial highways (r = .63) and property tax rate (r = .58).
+
+Crime is also correlated with low-to-moderate positive associations (.30 < r < .50) with 
+
+* _indus_ (proportion of non-retail business)
+* _nox_ (nitrogen oxides concentration)
+* _age_ (proportion of owner-occupied units built prior to 1940)
+* _lstat_ (lower status of the population)
+
+...and low-to-moderate negative associations (-.30 > r > -.50) with
+
+* _dis_ (distances to employment centres)
+* _black_ (the proportion of blacks by town)
+* _medv_ (median value of owner-occupied homes)
+
+<br/>
+
+Some other notable relationships:
+
+* _tax_ (property tax rate) is very strongly correlated (r = .91) with _rad_ (accessibility to radial highways) and strongly correlated (r =.72) with _indus_ (proportion of non-retail business)
+* _dis_ (distances to employment centers) is strongly negatively correlated (-.71 > r > -.77) with _indus_ (proportion of non-retail business), _nox_ (nitrogen oxides contration), and _age_ (units built prior to 1940)
+* _lstat_ (lower status of the population) is strongly negatively correlated (r = -.74) with _medv_ (median value of homes)
+
+<br/> <br/>
+
+
+## Task 4: Forming the train and test datas
+
+**Standardize the dataset and print out summaries of the scaled data.**
+
+``` {r 4_scale}
+
+# stanradizing the dataset and changing the new ohbject to data frame
+boston_scaled <- scale(Boston)
+boston_scaled <- as.data.frame(boston_scaled)
+
+summary(boston_scaled)
+```
+
+<br/>
+
+**How did the variables change?**
+
+All the variables have a mean of 0 and a standard deviation of 1.
+
+<br/>
+
+**Create a categorical variable of the crime rate in the Boston dataset (from the scaled crime rate). Use the quantiles as the break points in the categorical variable. Drop the old crime rate variable from the dataset.**
+
+``` {r 4_categorizing}
+# quantile vector
+bins <- quantile(boston_scaled$crim)
+
+# creating a categorical variable
+crime <- cut(boston_scaled$crim, breaks = bins, include.lowest = TRUE, labels = c("low", "med_low", "med_high", "high"))
+
+# removing original variable and adding the new categorical variable
+boston_scaled <- dplyr::select(boston_scaled, -crim)
+boston_scaled <- data.frame(boston_scaled, crime)
+```
+
+<br/>
+
+**Divide the dataset to train and test sets, so that 80% of the data belongs to the train set.**
+
+``` {r 4_training&testing_sets}
+# n of rows
+n <- nrow(boston_scaled)
+
+# random 80% of rows
+ind <- sample(n,  size = n * 0.8)
+
+# creating train and test sets
+train <- boston_scaled[ind,]
+test <- boston_scaled[-ind,]
+```
+
+<br/> <br/>
+
+## Task 5: Linear discriminant analysis
+
+**Fit the linear discriminant analysis on the train set. Use the categorical crime rate as the target variable and all the other variables in the dataset as predictor variables. Draw the LDA (bi)plot.**
+
+
+``` {r 4_LDA}
+# LDA
+lda.fit <- lda(crime ~ ., data = train)
+lda.fit
+lda.fit$means %>% kable(digits=2, caption = "<b>Table 4<b/>") %>%
+  kable_styling(bootstrap_options = "striped", "hover")
+
+
+# the function for lda biplot arrows
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  arrows(x0 = 0, y0 = 0, 
+         x1 = myscale * heads[,choices[1]], 
+         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+
+# target classes as numeric
+classes <- as.numeric(train$crime)
+
+# plotting the lda results
+plot(lda.fit, dimen = 2, col = classes, pch = classes)
+lda.arrows(lda.fit, myscale = 2)
+
+```
+<br/> <br/>
+
+## Task 6: Predicting with the model
+
+**Save the crime categories from the test set and then remove the categorical crime variable from the test dataset.**
+
+```{r 4_}
+# saving crime categories
+correct_classes <- test$crime
+
+# removing the variable from test data
+test <- dplyr::select(test, -crime)
+```
+
+<br/>
+
+**Then predict the classes with the LDA model on the test data. Cross tabulate the results with the crime categories from the test set. Comment on the results.**
+
+```{r }
+# predicting the classes with the model
+lda.pred <- predict(lda.fit, newdata = test)
+
+table(correct = correct_classes, predicted = lda.pred$class) %>%
+  kable(caption = "<b>Table 5</b> Correct and predicted crime classes cross-tabulated") %>%
+  kable_styling(bootstrap_options = "striped", "hover") %>%
+  add_header_above(c("Correct crime class", "Predicted crime class" = 4))
+
+# confusion matrix
+confusionMatrix(lda.pred$class, correct_classes)
+
+```
+
+<br/>
+
+Overall the prediction accuracy of the model is about 70 % (changes when the code is rerun, because the test data is sampled randomly every time), which is quite a high accuracy rate with 4 classes. It seems that the predictions are more accurate when the true high crime rate is high.
+
+<br/><br/>
+
+## Task 7: K-Means clustering
+
+**Reload the Boston dataset and standardize the dataset.**
+
+```{r 4_reload_data}
+# reloading data
+data("Boston")
+Bos <- scale(Boston)
+Bos <- as.data.frame(Bos)
+
+```
+
+<br/>
+
+**Calculate the distances between the observations.**
+
+```{r 4_distances}
+# euclidean distance matrix
+dist_eu <- dist(Bos)
+
+#manhattan distance matrix
+dist_man <- dist(Bos, method = "manhattan")
+
+# summaries
+summary(dist_eu)
+summary(dist_man)
+``` 
+
+**Run k-means algorithm on the dataset. Investigate what is the optimal number of clusters and run the algorithm again. Visualize the clusters (for example with the pairs() or ggpairs() functions, where the clusters are separated with colors) and interpret the results.**
+
+```{r 4_kmeans}
+# k-means clustering
+km <-kmeans(Bos, centers = 4)
+
+# determining k
+set.seed(500)
+k_max <- 10
+
+# the total within sum of squares
+twcss <- sapply(1:k_max, function(k){kmeans(Bos, k)$tot.withinss})
+qplot(x = 1:k_max, y = twcss, geom = 'line') + scale_x_continuous(breaks = 1:10)
+
+# k-means clustering
+km <-kmeans(Bos, centers = 2)
+
+# comparing clusters
+ggpairs(Bos[1:5], aes(col=factor(km$cluster), alpha = 0.3),
+        lower = list(combo = wrap("facethist", bins = 20)))
+ggpairs(Bos[6:10], aes(col=factor(km$cluster), alpha = 0.3),
+        lower = list(combo = wrap("facethist", bins = 20)))
+ggpairs(Bos[11:14], aes(col=factor(km$cluster), alpha = 0.3),
+        lower = list(combo = wrap("facethist", bins = 20)))
+ggplot(Bos, aes(group = km$cluster, y=crim, fill = factor(km$cluster))) + geom_boxplot()
+```
+
+<br/>
+
+It seems the most radical change (the "elbow") in the total of within cluster sum of squares (WCSS) happens between one and two clusters. Although WCSS decreases with increase in clusters, the changes become increasingly subtle. Therefore, I chose a 2 cluster solution.
+
+The clusters seem to differ in crime rate with cluster 2 with virtually no crime. The clusters also differ in proportion of non-retail business, nitrogen oxide concentration, proportion of old buildings, distance to employment centers, accessibilty of highways, property tax, and pupil-teacher ratio.
+
+<br/>
+
+
