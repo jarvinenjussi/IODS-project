@@ -48,7 +48,7 @@ describe(data) %>% kable(digits = 2, caption = "<b>Table 2</b> Descriptives") %>
   kable_styling(bootstrap_options = c("hover", "striped"))
 ```
 
-```{r 5_visuals}
+```{r 5_visuals, fig.height=6, fig.width=8}
 # histograms
 data %>%
   gather(factor_key = T) %>% 
@@ -78,7 +78,7 @@ cor.mtest <- function(cor.mat, ...) {
 }
 p.mat <- cor.mtest(data)
 corrplot.mixed(cor.mat, lower = "circle", upper = "number", tl.col = "black",
-               tl.cex = 0.8, number.cex = 0.9, number.digits = 2,
+               tl.cex = 1, number.cex = 1, number.digits = 2,
                p.mat = p.mat, sig.level = 0.05, insig = "blank")
 ```
 
@@ -92,13 +92,11 @@ Most of the vairables are quite symmetrically distributed. However, _GNI_ and _m
 
 <br/><br/>
 
-## Tasks 2-4: Principal component analysis
-
-### Task 2 
+## Tasks 2: Principal component analysis
 
 **Perform principal component analysis (PCA) on the not standardized human data. Show the variability captured by the principal components. Draw a biplot displaying the observations by the first two principal components (PC1 coordinate in x-axis, PC2 coordinate in y-axis), along with arrows representing the original variables.**
 
-```{r 5_pca}
+```{r 5_pca, fig.height=8, fig.width=10}
 # pca1
 pca1 <- prcomp(data)
 s1 <- summary(pca1)
@@ -114,11 +112,11 @@ biplot(pca1, cex = c(0.8, 1), col = c("grey40", "#f04124"),
 
 <br/>
 
-### Task 3
+## Task 3: PCA with standardized variables
 
 **Standardize the variables in the human data and repeat the above analysis. Interpret the results of both analysis (with and without standardizing). Are the results different? Why or why not? Include captions (brief descriptions) in your plots where you describe the results by using not just your variable names, but the actual phenomenons they relate to.**
 
-```{r 5_pca_stnd}
+```{r 5_pca_stnd, fig.height=8, fig.width=10}
 # standardizing data
 data_std <- scale(data)
 summary(data_std)
@@ -144,7 +142,7 @@ The biplot of standardized PCA show that parlF and labFM load mostly to the seco
 
 <br/>
 
-### Task 4:
+## Task 4: Interpreting the results
 
 **Give your personal interpretations of the first two principal component dimensions based on the biplot drawn after PCA on the standardized human data.**
 
@@ -171,7 +169,7 @@ summary(tea)
 
 <br/>
 
-```{r 5_mca_bar}
+```{r 5_mca_visuals, fig.height=7, fig.width=7}
 tea[,1:12] %>% gather(factor_key = T) %>%
   ggplot(aes(value)) +  facet_wrap("key", scales = "free") +
   geom_bar(fill = "#5bc0de") +
@@ -191,23 +189,29 @@ tea[,32:36] %>%  gather(factor_key = T) %>%
   ggplot(aes(value)) +  facet_wrap("key", scales = "free") +
   geom_bar(fill  = "#5bc0de") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6))
+```
 
+```{r 5_mca_visuals2}
 tea %>% ggplot(aes(age)) + geom_histogram(fill = "#5bc0de", color = "grey40", bins = 30)
 
 ```
-
 <br/>
 
 Selecting some variables for analysis:
 
 
 ```{r 5_mca_subset}
-tea_ <- tea[,c(1:18, 20, 22, 23)]
+tea_ <- dplyr::select(tea, one_of(c("Tea", "How", "how", "sugar", "where", "tea.time")))
+glimpse(tea_)
 ```
 
 
-```{r 5_mca}
+```{r 5_mca, fig.height=8, fig.width=10}
 mca <- MCA(tea_, graph = FALSE)
 summary(mca)
 plot(mca, invisible=c("ind"), habillage = "quali")
 ```
+
+The first dimension accounts for 15.5 % and the second dimension for 14.6 % of the total inertia. The first dimension seems to be related to the packaging of the tea and where it is bought. On the other end there is tea bags and tea from chain stores and on the other there is unpackacked tea and tea shops. The second dimension seems to be about the blend and what the tea is enjoyed with. Green tea and no seasoning locate on the upper half of the figure while black tea and Earl Grey, and milk and lemon are on the middle. The choice of other is on the bottom.
+
+
