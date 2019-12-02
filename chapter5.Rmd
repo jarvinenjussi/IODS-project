@@ -1,0 +1,213 @@
+# 5 Dimension reduction
+
+## Task 1: Show a graphical overview of the data
+**Show a graphical overview of the data and show summaries of the variables in the data. Describe and interpret the outputs, commenting on the distributions of the variables and the relationships between them.** 
+
+<br/>
+
+```{r 5_libraries, message=F}
+library(tidyverse); library(psych); library(kableExtra); library(GGally); library(corrplot)
+data <- read.table("data/human.csv", sep = ",", header = T, row.names = 1)
+```
+
+<br/>
+
+Original data from is from [United Nations' Human Development Reports][un]. The data combines several indicators from most countries in the world. Our modified analysis dataset has following variables:
+
+<br/>
+
+```{r 5_variables, echo=F, message=F}
+vars <- data.frame(
+  Variables = colnames(data),
+  Information = c(
+    "Proportion of females with at least secondary education devided by proportion of men with at least secondary education",
+    "Proportion of femals in the larbour force devided by proportion of males in the labour force",
+    "Expected years of schooling",
+    "Life expectancy at birth",
+    "Gross National Income per capita",
+    "Maternal mortality ratio",
+    "Adolescent birth rate",
+    "Proportion of female representatives in parliament"
+  )
+)
+
+kable(vars, caption = "<b>Table 1</b> Variables in the dataset") %>%
+  kable_styling(bootstrap_options = c("hover", "striped")) %>%
+  column_spec(1, bold = T, italic = T, color = "#008cba") %>% 
+  column_spec(2)
+```
+
+(Script for data modification can be found [here][human].)
+
+<br/>
+
+```{r 5_data}
+glimpse(data)
+summary(data)
+describe(data) %>% kable(digits = 2, caption = "<b>Table 2</b> Descriptives") %>%
+  kable_styling(bootstrap_options = c("hover", "striped"))
+```
+
+```{r 5_visuals}
+# histograms
+data %>%
+  gather(factor_key = T) %>% 
+  ggplot(aes(value)) +
+  facet_wrap(~ key, scales = "free") +
+  geom_histogram(color="grey40", fill="#5bc0de", bins = 30)
+
+# pairs
+data %>% ggpairs()
+
+# correlogram
+cor.mat <- cor(data, use = "everything")
+
+cor.mtest <- function(cor.mat, ...) {
+    mat <- as.matrix(cor.mat)
+    n <- ncol(cor.mat)
+    p.mat<- matrix(NA, n, n)
+    diag(p.mat) <- 0
+    for (i in 1:(n - 1)) {
+        for (j in (i + 1):n) {
+            tmp <- cor.test(mat[, i], mat[, j], ...)
+            p.mat[i, j] <- p.mat[j, i] <- tmp$p.value
+        }
+    }
+  colnames(p.mat) <- rownames(p.mat) <- colnames(mat)
+  p.mat
+}
+p.mat <- cor.mtest(data)
+corrplot.mixed(cor.mat, lower = "circle", upper = "number", tl.col = "black",
+               tl.cex = 0.8, number.cex = 0.9, number.digits = 2,
+               p.mat = p.mat, sig.level = 0.05, insig = "blank")
+```
+
+<br/>
+
+Most of the vairables are quite symmetrically distributed. However, _GNI_ and _maternal mortality_ are strongly positively skewed. There is also some positive skewness in _adolescent birth rate_. Life expectancy is correalted with maternal mortality (*r* = −.86), expected education, (*r* = .79), adolescent birht rate (*r* = −.73), GNI (*r* = .63), and education ratio (edu2FM; *r* = .58). Expected education has similar correlations with other variables. GNI is also correlated with life expectancy (*r* = .63), expected education (*r* = .62), education ratio (*r* = .58), adolescent birth rate (*r* = −.56) and maternal mortality (*r* = −.50).
+
+
+[un]: http://hdr.undp.org/en/content/human-development-index-hdi
+[human]: https://github.com/jarvinenjussi/IODS-project/blob/master/data/create_human.R
+
+<br/><br/>
+
+## Tasks 2-4: Principal component analysis
+
+### Task 2 
+
+**Perform principal component analysis (PCA) on the not standardized human data. Show the variability captured by the principal components. Draw a biplot displaying the observations by the first two principal components (PC1 coordinate in x-axis, PC2 coordinate in y-axis), along with arrows representing the original variables.**
+
+```{r 5_pca}
+# pca1
+pca1 <- prcomp(data)
+s1 <- summary(pca1)
+s1
+
+pca_pr1 <- round(100*s1$importance[2, ], digits = 2)
+pca_pr1
+pca1_lab <- paste0(names(pca_pr1), " (", pca_pr1, "%)")
+
+biplot(pca1, cex = c(0.8, 1), col = c("grey40", "#f04124"),
+       xlab = pca1_lab[1], ylab = pca1_lab[2])
+```
+
+<br/>
+
+### Task 3
+
+**Standardize the variables in the human data and repeat the above analysis. Interpret the results of both analysis (with and without standardizing). Are the results different? Why or why not? Include captions (brief descriptions) in your plots where you describe the results by using not just your variable names, but the actual phenomenons they relate to.**
+
+```{r 5_pca_stnd}
+# standardizing data
+data_std <- scale(data)
+summary(data_std)
+
+# pca2
+pca2 <- prcomp(data_std)
+s2 <- summary(pca2)
+s2
+
+pca_pr2 <- round(100*s2$importance[2, ], digits = 2)
+pca_pr2
+pca2_lab <- paste0(names(pca_pr2), " (", pca_pr2, "%)")
+
+biplot(pca2, cex = c(0.8, 1), col = c("grey40", "#f04124"),
+       xlab = pca2_lab[1], ylab = pca2_lab[2])
+```
+
+<br/>
+
+GNI dominates the components in PCA with un-standardized variables and the first principal component accounts for almost 100 % of the total variance of the observed vairables, whereas the results of PCA with standardized variables are make more sense. The differences are due to the standardization. More specifically, when principal components are extracted from the covariance matrix (un-standardzed), the results depend on the units of measurement, and large differences between the variances of the orginal variances affect the solution. Extracting the principal components from the correlation matrix (standardized to have unit of variance) makes the variables "equally important".
+
+The biplot of standardized PCA show that parlF and labFM load mostly to the second component PC2, which accounts for 16 % of the total variance in the variables, while other variables load to the first component PC1, which accounts for 54 % of the variance.
+
+<br/>
+
+### Task 4:
+
+**Give your personal interpretations of the first two principal component dimensions based on the biplot drawn after PCA on the standardized human data.**
+
+<br/>
+
+The first component seems to be the measure of general well-being indicators, such as GNI, life expectancy, education, mortality, and birth rate, whereas the second component seems to capture the variance in gender equality indicators, namely proportion of female representatives in parliament and the Female-Male ratio in labor force.
+
+<br/><br/>
+
+## Task 5: Multiple Correspondence Analysis
+
+**Load the tea dataset from the package Factominer. Explore the data briefly: look at the structure and the dimensions of the data and visualize it. Then do Multiple Correspondence Analysis on the tea data (or to a certain columns of the data, it’s up to you). Interpret the results of the MCA and draw at least the variable biplot of the analysis. You can also explore other plotting options for MCA. Comment on the output of the plots.**
+
+### The Tea dataset
+
+300 tea consumers have answered a survey about how they drink tea, what are their product's perception and some personal details. Except for the age, all the variables are categorical. For the age, the data set has two different variables: a continuous and a categorical one.
+
+``` {r 5_mca_data}
+library(FactoMineR)
+data(tea)
+glimpse(tea)
+summary(tea)
+```
+
+<br/>
+
+```{r 5_mca_bar}
+tea[,1:12] %>% gather(factor_key = T) %>%
+  ggplot(aes(value)) +  facet_wrap("key", scales = "free") +
+  geom_bar(fill = "#5bc0de") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+
+tea[,c(13:18, 20:22)] %>% gather(factor_key = T) %>%
+  ggplot(aes(value)) + facet_wrap("key", scales = "free") +
+  geom_bar(fill = "#5bc0de") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+
+tea[,23:31] %>%  gather(factor_key = T) %>%
+  ggplot(aes(value)) +  facet_wrap("key", scales = "free") +
+  geom_bar(fill  = "#5bc0de") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6))
+
+tea[,32:36] %>%  gather(factor_key = T) %>%
+  ggplot(aes(value)) +  facet_wrap("key", scales = "free") +
+  geom_bar(fill  = "#5bc0de") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6))
+
+tea %>% ggplot(aes(age)) + geom_histogram(fill = "#5bc0de", color = "grey40", bins = 30)
+
+```
+
+<br/>
+
+Selecting some variables for analysis:
+
+
+```{r 5_mca_subset}
+tea_ <- tea[,c(1:18, 20, 22, 23)]
+```
+
+
+```{r 5_mca}
+mca <- MCA(tea_, graph = FALSE)
+summary(mca)
+plot(mca, invisible=c("ind"), habillage = "quali")
+```
