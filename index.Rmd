@@ -15,12 +15,10 @@ output:
     
 ---
 
-<button type="button" class="btn btn-primary">Primary</button>
-
 [My IODS project github data repository][repository] ↗
 
 ***
-  
+
 ``` {r child = "chapter1.Rmd"}
 ```
 
@@ -67,5 +65,14 @@ output:
 
 <br/><br/><br/>
 
-[repository]: https://github.com/jarvinenjussi/IODS-project
-[onw]: 
+```{r child = "chapter6.Rmd"}
+```
+
+<br/><br/><br/>
+
+***
+
+<br/><br/><br/>
+
+[repository]: https://github.com/jarvinenjussi/IODS-project 
+
